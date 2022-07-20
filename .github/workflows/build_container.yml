@@ -10,8 +10,11 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-jobs:
+concurrency:
+  group: build-container
+  cancel-in-progress: true
 
+jobs:
   build-container:
     runs-on: ubuntu-latest
     permissions:
