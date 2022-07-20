@@ -29,3 +29,7 @@ image tags if GitHub hasn't deleted it yet.
    To do this, create a gpg secret key and provide it to *ArgoCD* inside its *gpg-keys* volume.
    The file must be named like the key fingerprint.
    On startup, *ArgoCD* will automatically load all key files (public and secret) from here into a keyring.
+
+## Usage Example
+
+An example deployment base on kustomize can be viewed inside the [example](./example) folder.
