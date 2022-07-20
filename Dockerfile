@@ -9,3 +9,5 @@ RUN apt-get update \
 
 RUN mv /usr/bin/git /usr/bin/git.bin
 COPY git-wrapper.sh /usr/bin/git
+
+USER 999
