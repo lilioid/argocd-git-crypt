@@ -1,4 +1,4 @@
-FROM quay.io/argoproj/argocd:v2.6.2
+FROM quay.io/argoproj/argocd:v2.6.3
 
 USER root
 
