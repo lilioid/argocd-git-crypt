@@ -11,7 +11,7 @@ still using *ArgoCD* to deploy them.
 
 The latest *ArgoCD* release is automatically rebuilt and published to the GitHub image registry.
 However, this really **only includes the latest *ArgoCD* release**.
-If you or your organisation needs another version, you will have to build the image yourself or use one of the older
+If you or your organisation need another version, you will have to build the image yourself or use one of the older
 image tags if GitHub hasn't deleted it yet.
 
 ## Usage
@@ -25,7 +25,7 @@ image tags if GitHub hasn't deleted it yet.
    it but instead of using the normal image, you will have to use this repositories image instead for
    the `argocd-repo-server` deployment.
 
-2. Additionally, you will need to configure *ArgoCD* a bit to allow *kustomize-pass* to work correctly.
+2. Additionally, you will need to configure *ArgoCD* a bit to allow *git-crypt* to work correctly.
    To do this, create a gpg secret key and provide it to *ArgoCD* inside its *gpg-keys* volume.
    The file must be named like the key fingerprint.
    On startup, *ArgoCD* will automatically load all key files (public and secret) from here into a keyring.
