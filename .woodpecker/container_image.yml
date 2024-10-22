@@ -1,0 +1,39 @@
+steps:
+  - name: build container image
+    when:
+      - event: push
+      - event: cron
+      - event: manual
+    image: quay.io/containers/podman
+    privileged: true
+    secrets: [ "FORGEJO_PACKAGES_ACCESS", "GITHUB_PACKAGES_ACCESS" ]
+    commands:
+      - |
+        podman build . -t argocd-git-crypt \
+          --label "org.opencontainers.image.source=$CI_REPO_URL" \
+          --label "org.opencontainers.image.licenses=Apache-2.0" \
+          --label "org.opencontainers.image.title=argocd-git-crypt" \
+          --label "org.opencontainers.image.description=ArgoCD with automatic git-crypt decryption" \
+          --label "org.opencontainers.image.base.name=quay.io/argoproj/argocd"
+      - podman save -o container.tar.gz argocd-git-crypt
+
+  - name: publish container image
+    when:
+      - event: manual
+        branch: main
+      - event: push
+        branch: main
+      - event: cron
+        cron: periodic-rebuild
+    image: quay.io/containers/skopeo
+    secrets: [ "FORGEJO_PACKAGES_ACCESS", "GITHUB_PACKAGES_ACCESS" ]
+    commands:
+      - |
+        ORIGINAL_IMAGE=$(sed -nr 's/FROM (.*):(.*)/\1/p' Dockerfile)
+        echo "ORIGINAL_IMAGE=$ORIGINAL_IMAGE"
+        ORIGINAL_VERSION=$(sed -nr 's/FROM (.*):(.*)/\2/p' Dockerfile)
+        echo "ORIGIONAL_VERSION=$ORIGINAL_VERSION"
+      - skopeo copy --dest-username ftsell --dest-password $FORGEJO_PACKAGES_ACCESS docker-archive:container.tar.gz docker://git.lly.sh/ftsell/argocd-git-crypt:latest
+      - skopeo copy --dest-username ftsell --dest-password $FORGEJO_PACKAGES_ACCESS docker-archive:container.tar.gz docker://git.lly.sh/ftsell/argocd-git-crypt:$ORIGINAL_VERSION
+      - skopeo copy --dest-username ftsell --dest-password $GITHUB_PACKAGES_ACCESS docker-archive:container.tar.gz docker://ghcr.io/ftsell/argocd-git-crypt:latest
+      - skopeo copy --dest-username ftsell --dest-password $GITHUB_PACKAGES_ACCESS docker-archive:container.tar.gz docker://ghcr.io/ftsell/argocd-git-crypt:$ORIGINAL_VERSION
