@@ -54,7 +54,7 @@ steps:
         ORIGINAL_IMAGE=$(sed -nr 's/FROM (.*):(.*)/\1/p' Dockerfile)
         echo "ORIGINAL_IMAGE=$ORIGINAL_IMAGE"
         ORIGINAL_VERSION=$(sed -nr 's/FROM (.*):(.*)/\2/p' Dockerfile)
-        echo "ORIGIONAL_VERSION=$ORIGINAL_VERSION"
+        echo "ORIGINAL_VERSION=$ORIGINAL_VERSION"
       - skopeo copy --dest-username lilly --dest-password $FORGEJO_PACKAGES_ACCESS docker-archive:container.tar.gz docker://git.lly.sh/lilly/argocd-git-crypt:latest
       - skopeo copy --dest-username lilly --dest-password $FORGEJO_PACKAGES_ACCESS docker-archive:container.tar.gz docker://git.lly.sh/lilly/argocd-git-crypt:$ORIGINAL_VERSION
       - skopeo copy --dest-username lilioid --dest-password $GITHUB_PACKAGES_ACCESS docker-archive:container.tar.gz docker://ghcr.io/lilioid/argocd-git-crypt:latest
