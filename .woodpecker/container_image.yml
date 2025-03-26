@@ -11,6 +11,13 @@ steps:
         from_secret: FORGEJO_PACKAGES_ACCESS
       GITHUB_PACKAGES_ACCESS:
         from_secret: GITHUB_PACKAGES_ACCESS
+    backend_options:
+      kubernetes:
+        resources:
+          requests:
+            cpu: 100m
+          limits:
+            memory: 500Mi
     commands:
       - |
         podman build . -t argocd-git-crypt \
@@ -35,6 +42,13 @@ steps:
         from_secret: FORGEJO_PACKAGES_ACCESS
       GITHUB_PACKAGES_ACCESS:
         from_secret: GITHUB_PACKAGES_ACCESS
+    backend_options:
+      kubernetes:
+        resources:
+          requests:
+            cpu: 100m
+          limits:
+            memory: 200Mi
     commands:
       - |
         ORIGINAL_IMAGE=$(sed -nr 's/FROM (.*):(.*)/\1/p' Dockerfile)
