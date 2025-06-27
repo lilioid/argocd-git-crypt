@@ -18,7 +18,7 @@ image tags if GitHub hasn't deleted it yet.
 
 1. This repository contains the source *Dockerfile* to build an image derived from `quay.io/argoproj/argocd`.
    You can either use the *Dockerfile* to build your own image or use the provided image
-   from [`ghcr.io/ftsell/argocd-git-crypt`](https://github.com/ftsell/argocd-git-crypt/pkgs/container/argocd-git-crypt).
+   from [`ghcr.io/lilioid/argocd-git-crypt`](https://github.com/lilioid/argocd-git-crypt/pkgs/container/argocd-git-crypt).
 
    This repository does not contain helm charts or other *ArgoCD* related manifests.
    This means that, in order to use this, you will have to follow the upstream *ArgoCD* instructions in order to deploy
