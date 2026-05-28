@@ -1,3 +1,4 @@
+name: container-image
 on:
   workflow_dispatch: {}
   push:
@@ -8,48 +9,46 @@ on:
 jobs:
   build-image:
     runs-on: alpine-latest
+    container:
+      image: ghcr.io/osscontainertools/kaniko:alpine
     steps:
-      - name: setup-docker
-        run: apk add --no-cache docker-cli docker-cli-buildx
+      - name: Install required system packages
+        run: apk add --no-cache nodejs
       
-      - name: checkout
-        uses: actions/checkout@v4
+      - name: Checkout Source Code
+        uses: actions/checkout@v6
 
       - name: extract-image-metadata
         id: extract-image-metadata
         run: |-
-            ORIGINAL_IMAGE=$(sed -nr 's/FROM (.*):(.*)/\1/p' Dockerfile)
+            ORIGINAL_IMAGE=$(sed -nr 's/FROM (.*):(.*)/\1/p' Containerfile)
             echo "ORIGINAL_IMAGE=$ORIGINAL_IMAGE"
             echo "original_image=$ORIGINAL_IMAGE" >> "$FORGEJO_OUTPUT"
 
-            ORIGINAL_VERSION=$(sed -nr 's/FROM (.*):(.*)/\2/p' Dockerfile)
+            ORIGINAL_VERSION=$(sed -nr 's/FROM (.*):(.*)/\2/p' Containerfile)
             echo "ORIGINAL_VERSION=$ORIGINAL_VERSION"
             echo "original_version=$ORIGINAL_VERSION" >> "$FORGEJO_OUTPUT"
-        
-      - name: build-image
-        run: |
-          docker build . \
-            -t "argocd-git-crypt:${{ steps.extract-image-metadata.outputs.original_version }}" \
-            --label "org.opencontainers.image.source=${{ forgejo.server_url }}/${{ forgejo.repository }}" \
-            --label "org.opencontainers.image.licenses=Apache-2.0" \
-            --label "org.opencontainers.image.title=argocd-git-crypt" \
-            --label "org.opencontainers.image.description=ArgoCD with automatic git-crypt decryption" \
-            --label "org.opencontainers.image.base.name=quay.io/argoproj.argocd"
 
-      - name: push-image
-        if: forgejo.ref_name == 'main'
-        run: |-
-          docker login -u lilly -p "${{ secrets.HANSE_PACKAGES_ACCESS }}" git.hanse.de
-          docker login -u lilioid -p "${{ secrets.GH_PACKAGES_ACCESS }}" ghcr.io
-
-          function publish() {
-            echo "publishing $1"
-            docker tag "argocd-git-crypt:${{ steps.extract-image-metadata.outputs.original_version }}" "$1"
-            docker push "$1"
-          }
-
-          publish "git.hanse.de/${{ forgejo.repository }}:${{ steps.extract-image-metadata.outputs.original_version }}"
-          publish "git.hanse.de/${{ forgejo.repository }}:latest"
-          publish "ghcr.io/lilioid/argocd-git-crypt:${{ steps.extract-image-metadata.outputs.original_version }}"
-          publish "ghcr.io/lilioid/argocd-git-crypt:latest"
-          
+      - name: Build Container
+        env:
+          KANIKO_NO_PUSH: ${{ forgejo.ref_name != 'main' }}
+          KANIKO_GIT_HANSE_DE_USER: lilly
+          KANIKO_GIT_HANSE_DE_PASSWORD: ${{ secrets.HANSE_PACKAGES_ACCESS }}
+          KANIKO_GHCR_IO_USER: lilioid
+          KANIKO_GHCR_IO_PASSWORD: ${{ secrets.GH_PACKAGES_ACCESS }}
+        run: /kaniko/executor
+          --dockerfile="${{forgejo.workspace }}/Containerfile"
+          --context="dir://${{ forgejo.workspace }}"
+          --destination=git.hanse.de/${{ forgejo.repository }}:latest
+          --destination=git.hanse.de/${{ forgejo.repository }}:${{ steps.extract-image-metadata.outputs.original_version }}
+          --destination=ghcr.io/lilioid/argocd-git-crypt:latest
+          --destination=ghcr.io/lilioid/argocd-git-crypt:${{ steps.extract-image-metadata.outputs.original_version }}
+          --no-push-cache
+          --credential-helpers=env
+          --annotation=org.opencontainers.image.title="argocd-git-crypt"
+          --annotation=org.opencontainers.image.description="ArgoCD with automatic git-crypt decryption"
+          --annotation=org.opencontainers.image.url=${{ forgejo.server_url }}/${{ forgejo.repository }}
+          --annotation=org.opencontainers.image.source=${{ forgejo.server_url }}/${{ forgejo.repository }}
+          --annotation=org.opencontainers.image.revision=${{ forgejo.sha }}
+          --annotation=org.opencontainers.image.licenses=Apache-2.0
+          --annotation=org.opencontainers.image.base.name="quay.io/argoproj.argocd"
